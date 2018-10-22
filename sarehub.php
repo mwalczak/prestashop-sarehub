@@ -114,7 +114,7 @@ class Sarehub extends Module
     public function hookOrderConfirmation($params)
     {
         $this->debug(['hook' => 'hookOrderConfirmation']);
-        $this->debug($this->CheckPage());
+        $this->debug($this->getPage());
         $this->debug($params);
 
         $order = $params['order'];
@@ -129,12 +129,12 @@ class Sarehub extends Module
     public function hookHeader($params)
     {
         $this->debug(['hook' => 'hookHeader']);
-        $this->debug($this->CheckPage());
+        $this->debug($this->getPage());
         $this->debug($params);
         $javascriptEvent = null;
         $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
 
-        switch ($this->CheckPage()) {
+        switch ($this->getPage()) {
             case "ProductController":
                 if ($id_product = (int)Tools::getValue('id_product')) {
                     $event
@@ -182,10 +182,10 @@ class Sarehub extends Module
             default:
                 break;
         }
-        return $this->genScript($event, $this->CheckPage(), $javascriptEvent);
+        return $this->genScript($event, $this->getPage(), $javascriptEvent);
     }
 
-    private function CheckPage()
+    private function getPage()
     {
         return !empty($this->context->controller) ? get_class($this->context->controller) : "";
     }
