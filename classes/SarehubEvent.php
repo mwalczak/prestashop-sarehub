@@ -13,6 +13,7 @@ class SarehubEvent
     private $id;
     private $type = "event";
     private $params = [];
+    private $JSEvents = [];
 
     public function __construct($userId = null, $email = null)
     {
@@ -118,5 +119,27 @@ class SarehubEvent
             'language' => $language
         ];
         return $this;
+    }
+
+    public function setJSEvent($eventType, $country, $language, $cartId)
+    {
+        switch ($eventType){
+            case "productCartAdd":
+                $this->JSEvents[]=
+                    "   document.addEventListener('click', function(e){" . PHP_EOL
+                    . "     if(e.srcElement.classList.contains('add-to-cart')){" . PHP_EOL
+                    . "         var product_input = document.getElementById('product_page_product_id');" . PHP_EOL
+                    . "         var quantity_input = document.getElementById('quantity_wanted');" . PHP_EOL
+                    . "         var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartadd' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_input.value, 'quantity' : quantity_input.value}};" . PHP_EOL
+                    . "         console.log(execute_params);" . PHP_EOL
+                    . "         sareX_core.execute(10, execute_params);" . PHP_EOL
+                    . "     }" . PHP_EOL
+                    . "   });" . PHP_EOL;
+        }
+    }
+
+    public function getJSEvent()
+    {
+        return implode(PHP_EOL, $this->JSEvents);
     }
 }

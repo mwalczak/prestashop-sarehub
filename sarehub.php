@@ -1,4 +1,10 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: mwalczak
+ * Date: 20.10.2018
+ * Time: 19:53
+ */
 
 require_once "classes/SarehubEvent.php";
 
@@ -131,7 +137,6 @@ class Sarehub extends Module
         $this->debug(['hook' => 'hookHeader']);
         $this->debug($this->getPage());
         $this->debug($params);
-        $javascriptEvent = null;
         $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
 
         switch ($this->getPage()) {
@@ -144,18 +149,8 @@ class Sarehub extends Module
                             (((isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])),
                             $this->context->country->iso_code,
                             $this->context->language->iso_code
-                        );
-
-                    $javascriptEvent =
-                        "   document.addEventListener('click', function(e){" . PHP_EOL
-                        . "     if(e.srcElement.classList.contains('add-to-cart')){" . PHP_EOL
-                        . "         var product_input = document.getElementById('product_page_product_id');" . PHP_EOL
-                        . "         var quantity_input = document.getElementById('quantity_wanted');" . PHP_EOL
-                        . "         var execute_params = {'_userId': '" . $this->context->customer->id . "', '_email' : '" . $this->context->customer->email . "', '_cartadd' : {'country' : '" . $this->context->country->iso_code . "', 'language': '" . $this->context->language->iso_code . "', 'cart_id' : '" . $params['cart']->id . "', 'product_id' : product_input.value, 'quantity' : quantity_input.value}};" . PHP_EOL
-                        . "         console.log(execute_params);" . PHP_EOL
-                        . "         sareX_core.execute(10, execute_params);" . PHP_EOL
-                        . "     }" . PHP_EOL
-                        . "   });" . PHP_EOL;
+                        )
+                        ->setJSEvent("productCartAdd", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
                 }
                 break;
             case "CategoryController":
@@ -166,7 +161,9 @@ class Sarehub extends Module
                             $id_category,
                             $this->context->country->iso_code,
                             $this->context->language->iso_code
-                        );
+                        )
+                        ->setJSEvent("productCartAdd", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
+
                 }
                 break;
             case "CartController":
@@ -180,9 +177,10 @@ class Sarehub extends Module
             case "PageNotFoundController":
                 return "";
             default:
+                $event->setJSEvent("productCartAdd", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
                 break;
         }
-        return $this->genScript($event, $this->getPage(), $javascriptEvent);
+        return $this->genScript($event, $this->getPage());
     }
 
     private function getPage()
@@ -190,7 +188,7 @@ class Sarehub extends Module
         return !empty($this->context->controller) ? get_class($this->context->controller) : "";
     }
 
-    private function genScript(SarehubEvent $event, $eventType = '', $javascriptEvent = null)
+    private function genScript(SarehubEvent $event, $eventType = '')
     {
         $sarehub_domain = Tools::safeOutput(Configuration::get('SAREHUB_DOMAIN'));
         if (!$sarehub_domain) {
@@ -208,28 +206,12 @@ class Sarehub extends Module
             $script .=
                 PHP_EOL . '   sareX_params.'.$event->getType().' = ' . $params . ';';
         }
-        if (!empty($javascriptEvent)) {
-            $script .= PHP_EOL . PHP_EOL. $javascriptEvent;
+        if ($JSEvent = $event->getJSEvent()) {
+            $script .= PHP_EOL . PHP_EOL. $JSEvent;
         }
         $script .=
             PHP_EOL . '   console.log(' . json_encode(['site' => $eventType, 'type'=>$event->getType(), 'data' => $event->getEncodedParams()]) . ');' .
             PHP_EOL . '  </script>';
-
-        $this->debug($script);
-
-        return $script;
-    }
-
-    private function genExecute($event)
-    {
-        $script = '';
-        if (!empty($event)) {
-            $script = '<script type="text/javascript">';
-            $script .= PHP_EOL . '   var execute_params = ' . json_encode($event);
-            $script .= PHP_EOL . '   console.log(execute_params, \'sareX_core.execute\');';
-            $script .= PHP_EOL . '   sareX_core.execute(10, execute_params);';
-            $script .= PHP_EOL . '  </script>';
-        }
 
         $this->debug($script);
 
