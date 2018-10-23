@@ -135,6 +135,16 @@ class SarehubEvent
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
+            case "productCartDel":
+                $this->JSEvents[]=
+                    "   document.addEventListener('click', function(e){" . PHP_EOL
+                    . "     if(e.srcElement.parentElement.classList.contains('remove-from-cart')){" . PHP_EOL
+                    . "         var product_id = e.srcElement.parentElement.getAttribute('data-id-product');" . PHP_EOL
+                    . "         var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartdel' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : 0}};" . PHP_EOL
+                    . "         console.log(execute_params);" . PHP_EOL
+                    . "         sareX_core.execute(10, execute_params);" . PHP_EOL
+                    . "     }" . PHP_EOL
+                    . "   });" . PHP_EOL;
         }
     }
 

@@ -169,7 +169,8 @@ class Sarehub extends Module
             case "CartController":
             case "OrderController":
                 if (!empty($params['cart']->id)) {
-                    $event->setCartRegistration($params['cart']->id);
+                    $event->setCartRegistration($params['cart']->id)
+                    ->setJSEvent("productCartDel", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
                 }
                 break;
             case "OrderConfirmationController":
