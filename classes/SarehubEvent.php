@@ -123,9 +123,9 @@ class SarehubEvent
 
     public function setJSEvent($eventType, $country, $language, $cartId)
     {
-        switch ($eventType){
+        switch ($eventType) {
             case "productCartAdd":
-                $this->JSEvents[]=
+                $this->JSEvents[] =
                     "   document.addEventListener('click', function(e){" . PHP_EOL
                     . "     if(e.srcElement.classList.contains('add-to-cart')){" . PHP_EOL
                     . "         var product_input = document.getElementById('product_page_product_id');" . PHP_EOL
@@ -137,7 +137,7 @@ class SarehubEvent
                     . "   });" . PHP_EOL;
                 break;
             case "productCartDel":
-                $this->JSEvents[]=
+                $this->JSEvents[] =
                     "   document.addEventListener('click', function(e){" . PHP_EOL
                     . "     if(e.srcElement.parentElement.classList.contains('remove-from-cart')){" . PHP_EOL
                     . "         var product_id = e.srcElement.parentElement.getAttribute('data-id-product');" . PHP_EOL
@@ -148,7 +148,7 @@ class SarehubEvent
                     . "   });" . PHP_EOL;
                 break;
             case "productCartQuantity":
-                $this->JSEvents[]=
+                $this->JSEvents[] =
                     "   document.addEventListener('change', function(e){" . PHP_EOL
                     . "   if(e.srcElement.classList.contains('js-cart-line-product-quantity')){" . PHP_EOL
                     . "     var product_id = e.srcElement.getAttribute('data-product-id');" . PHP_EOL
@@ -171,6 +171,23 @@ class SarehubEvent
                     . "                 break;" . PHP_EOL
                     . "             }" . PHP_EOL
                     . "         }" . PHP_EOL
+                    . "     }" . PHP_EOL
+                    . "   });" . PHP_EOL;
+                break;
+            case "order":
+                $this->JSEvents[] =
+                    "   document.addEventListener('click', function(e){" . PHP_EOL
+                    . "     if(e.srcElement.name=='confirm-addresses' || e.srcElement.name=='confirmDeliveryOption'){" . PHP_EOL
+                    . "         switch (e.srcElement.name) {" . PHP_EOL
+                    . "             case 'confirm-addresses':" . PHP_EOL
+                    . "                 var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartdelivery' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "'}};" . PHP_EOL
+                    . "                 break;" . PHP_EOL
+                    . "             case 'confirmDeliveryOption':" . PHP_EOL
+                    . "                 var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartpayment' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "'}};" . PHP_EOL
+                    . "                 break;" . PHP_EOL
+                    . "         }" . PHP_EOL
+                    . "         console.log(execute_params);" . PHP_EOL
+                    . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
                 break;
