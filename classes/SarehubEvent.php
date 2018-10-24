@@ -135,6 +135,7 @@ class SarehubEvent
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
+                break;
             case "productCartDel":
                 $this->JSEvents[]=
                     "   document.addEventListener('click', function(e){" . PHP_EOL
@@ -145,7 +146,36 @@ class SarehubEvent
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
+                break;
+            case "productCartQuantity":
+                $this->JSEvents[]=
+                    "   document.addEventListener('change', function(e){" . PHP_EOL
+                    . "   if(e.srcElement.classList.contains('js-cart-line-product-quantity')){" . PHP_EOL
+                    . "     var product_id = e.srcElement.getAttribute('data-product-id');" . PHP_EOL
+                    . "     var product_quantity = e.srcElement.value;" . PHP_EOL
+                    . "     var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartquantity' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : product_quantity}};" . PHP_EOL
+                    . "     console.log(execute_params);" . PHP_EOL
+                    . "     sareX_core.execute(10, execute_params);" . PHP_EOL
+                    . "   }" . PHP_EOL
+                    . " });" . PHP_EOL
+                    . "   document.addEventListener('click', function(e){" . PHP_EOL
+                    . "     if(e.srcElement.parentElement.classList.contains('js-increase-product-quantity') || e.srcElement.parentElement.classList.contains('js-decrease-product-quantity')){" . PHP_EOL
+                    . "         var product_group_node = e.srcElement.parentElement.parentElement.parentElement;" . PHP_EOL
+                    . "         for (var i = 0; i < product_group_node.childNodes.length; i++) {" . PHP_EOL
+                    . "             if (product_group_node.childNodes[i].classList.contains('js-cart-line-product-quantity')) {" . PHP_EOL
+                    . "                 var product_id = product_group_node.childNodes[i].getAttribute('data-product-id');" . PHP_EOL
+                    . "                 var product_quantity = product_group_node.childNodes[i].value;" . PHP_EOL
+                    . "                 var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartquantity' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : product_quantity}};" . PHP_EOL
+                    . "                 console.log(execute_params);" . PHP_EOL
+                    . "                 sareX_core.execute(10, execute_params);" . PHP_EOL
+                    . "                 break;" . PHP_EOL
+                    . "             }" . PHP_EOL
+                    . "         }" . PHP_EOL
+                    . "     }" . PHP_EOL
+                    . "   });" . PHP_EOL;
+                break;
         }
+        return $this;
     }
 
     public function getJSEvent()
