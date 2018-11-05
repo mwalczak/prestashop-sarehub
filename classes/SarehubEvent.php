@@ -14,11 +14,17 @@ class SarehubEvent
     private $type = "event";
     private $params = [];
     private $JSEvents = [];
+    private $logging = false;
 
     public function __construct($userId = null, $email = null)
     {
         $this->userId = $userId;
         $this->email = $email;
+    }
+
+    public function setLogging($log)
+    {
+        $this->logging = $log;
     }
 
     public function getEncodedParams()
@@ -131,7 +137,7 @@ class SarehubEvent
                     . "         var product_input = document.getElementById('product_page_product_id');" . PHP_EOL
                     . "         var quantity_input = document.getElementById('quantity_wanted');" . PHP_EOL
                     . "         var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartadd' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_input.value, 'quantity' : quantity_input.value}};" . PHP_EOL
-                    . "         console.log(execute_params);" . PHP_EOL
+                    . ($this->logging ? "         console.log(execute_params);" . PHP_EOL : '')
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
@@ -142,7 +148,7 @@ class SarehubEvent
                     . "     if(e.srcElement.parentElement.classList.contains('remove-from-cart')){" . PHP_EOL
                     . "         var product_id = e.srcElement.parentElement.getAttribute('data-id-product');" . PHP_EOL
                     . "         var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartdel' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : 0}};" . PHP_EOL
-                    . "         console.log(execute_params);" . PHP_EOL
+                    . ($this->logging ? "         console.log(execute_params);" . PHP_EOL : '')
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;
@@ -154,7 +160,7 @@ class SarehubEvent
                     . "     var product_id = e.srcElement.getAttribute('data-product-id');" . PHP_EOL
                     . "     var product_quantity = e.srcElement.value;" . PHP_EOL
                     . "     var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartquantity' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : product_quantity}};" . PHP_EOL
-                    . "     console.log(execute_params);" . PHP_EOL
+                    . ($this->logging ? "     console.log(execute_params);" . PHP_EOL : '')
                     . "     sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "   }" . PHP_EOL
                     . " });" . PHP_EOL
@@ -166,7 +172,7 @@ class SarehubEvent
                     . "                 var product_id = product_group_node.childNodes[i].getAttribute('data-product-id');" . PHP_EOL
                     . "                 var product_quantity = product_group_node.childNodes[i].value;" . PHP_EOL
                     . "                 var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartquantity' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "', 'product_id' : product_id, 'quantity' : product_quantity}};" . PHP_EOL
-                    . "                 console.log(execute_params);" . PHP_EOL
+                    . ($this->logging ? "                 console.log(execute_params);" . PHP_EOL : '')
                     . "                 sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "                 break;" . PHP_EOL
                     . "             }" . PHP_EOL
@@ -186,7 +192,7 @@ class SarehubEvent
                     . "                 var execute_params = {'_userId': '" . $this->userId . "', '_email' : '" . $this->email . "', '_cartpayment' : {'country' : '" . $country . "', 'language': '" . $language . "', 'cart_id' : '" . $cartId . "'}};" . PHP_EOL
                     . "                 break;" . PHP_EOL
                     . "         }" . PHP_EOL
-                    . "         console.log(execute_params);" . PHP_EOL
+                    . ($this->logging ? "         console.log(execute_params);" . PHP_EOL : '')
                     . "         sareX_core.execute(10, execute_params);" . PHP_EOL
                     . "     }" . PHP_EOL
                     . "   });" . PHP_EOL;

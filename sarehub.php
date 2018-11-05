@@ -46,6 +46,8 @@ class Sarehub extends Module
             return false;
 
         Configuration::deleteByName('SAREHUB_DOMAIN');
+        Configuration::deleteByName('SAREHUB_PUSH');
+        Configuration::deleteByName('SAREHUB_LOG');
         return parent::uninstall();
     }
 
@@ -56,6 +58,8 @@ class Sarehub extends Module
         // If form has been sent
         if (Tools::isSubmit('submit' . $this->name)) {
             Configuration::updateValue('SAREHUB_DOMAIN', Tools::getValue('SAREHUB_DOMAIN'));
+            Configuration::updateValue('SAREHUB_PUSH', Tools::getValue('SAREHUB_PUSH'));
+            Configuration::updateValue('SAREHUB_LOG', Tools::getValue('SAREHUB_LOG'));
             $output .= $this->displayConfirmation($this->l('Settings updated successfully'));
         }
 
@@ -92,7 +96,51 @@ class Sarehub extends Module
                         'size' => 20,
                         'required' => true,
                         'hint' => $this->l('Enter domain that was setup in SAREhub')
-                    )
+                    ),
+                    array(
+                        'type' => 'select',
+                        'label' => $this->l('Sarehub push'),
+                        'name' => 'SAREHUB_PUSH',
+                        'options' => array(
+                            'query' => array(
+                                array(
+                                    'value' => 0,       // The value of the 'value' attribute of the <option> tag.
+                                    'name' => 'Disable'    // The value of the text content of the  <option> tag.
+                                ),
+                                array(
+                                    'value' => 'popup',
+                                    'name' => 'Popup'
+                                ),
+                                array(
+                                    'value' => 'popover',
+                                    'name' => 'Popover'
+                                )
+                            ),
+                            'id' => 'value',
+                            'name' => 'name'
+                        ),
+                        'required' => true,
+                        'hint' => $this->l('Enable SAREhub native web push')
+                    ),
+                    array(
+                        'type' => 'switch',
+                        'label' => $this->l('Log events to console'),
+                        'name' => 'SAREHUB_LOG',
+                        'is_bool' => true,
+                        'values' => array(
+                            array(
+                                'id' => 'log_on',
+                                'value' => 1,
+                                'label' => $this->l('Yes')
+                            ),
+                            array(
+                                'id' => 'log_off',
+                                'value' => 0,
+                                'label' => $this->l('No')
+                            )
+                        ),
+                        'desc' => $this->l('Check to log events to browser console')
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Save')
@@ -102,27 +150,14 @@ class Sarehub extends Module
 
         // Load current value
         $helper->fields_value['SAREHUB_DOMAIN'] = Configuration::get('SAREHUB_DOMAIN');
+        $helper->fields_value['SAREHUB_PUSH'] = Configuration::get('SAREHUB_PUSH');
+        $helper->fields_value['SAREHUB_LOG'] = Configuration::get('SAREHUB_LOG');
 
         return $helper->generateForm(array($fields_forms));
     }
 
-    private function debug($object)
-    {
-
-        file_put_contents("/tmp/shop_" . date("Y-m-d") . ".log",
-            PHP_EOL . date("Y-m-d H:i:s") . PHP_EOL .
-            print_r($object, true),
-            FILE_APPEND
-        );
-
-    }
-
     public function hookOrderConfirmation($params)
     {
-        $this->debug(['hook' => 'hookOrderConfirmation']);
-        $this->debug($this->getPage());
-        $this->debug($params);
-
         $order = $params['order'];
         if (!empty($order)) {
             $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
@@ -134,11 +169,9 @@ class Sarehub extends Module
 
     public function hookHeader($params)
     {
-        $this->debug(['hook' => 'hookHeader']);
-        $this->debug($this->getPage());
-        $this->debug($params);
+        $sarehub_log = Tools::safeOutput(Configuration::get('SAREHUB_LOG'));
         $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
-
+        $event->setLogging($sarehub_log);
         switch ($this->getPage()) {
             case "ProductController":
                 if ($id_product = (int)Tools::getValue('id_product')) {
@@ -198,14 +231,22 @@ class Sarehub extends Module
         if (!$sarehub_domain) {
             return;
         }
+        $sarehub_push = Tools::safeOutput(Configuration::get('SAREHUB_PUSH'));
+        $sarehub_log = Tools::safeOutput(Configuration::get('SAREHUB_LOG'));
         $script = '<script type="text/javascript">' .
             PHP_EOL . '   (function (p){' .
             PHP_EOL . '   window[\'sareX_params\']=p;var s=document.createElement(\'script\');' .
             PHP_EOL . '   s.src=\'//x.sare25.com/libs/sarex4.min.js\';s.async=true;var t=document.getElementsByTagName(\'script\')[0];' .
             PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
             PHP_EOL . '   })({' .
-            PHP_EOL . '       domain : \'' . $sarehub_domain . '\'' .
-            PHP_EOL . '   });';
+            PHP_EOL . '       domain : \'' . $sarehub_domain . '\'';
+        if(!empty($sarehub_push)){
+            $script .= ',';
+            $script .= PHP_EOL . '      webPush: {';
+            $script .= PHP_EOL . '          mode: \''.$sarehub_push.'\'';
+            $script .= PHP_EOL . '      }';
+        }
+        $script .= PHP_EOL . '   });';
         if ($params = $event->getEncodedParams()) {
             $script .=
                 PHP_EOL . '   sareX_params.'.$event->getType().' = ' . $params . ';';
@@ -213,11 +254,10 @@ class Sarehub extends Module
         if ($JSEvent = $event->getJSEvent()) {
             $script .= PHP_EOL . PHP_EOL. $JSEvent;
         }
-        $script .=
-            PHP_EOL . '   console.log(' . json_encode(['site' => $eventType, 'type'=>$event->getType(), 'data' => $event->getEncodedParams()]) . ');' .
-            PHP_EOL . '  </script>';
-
-        $this->debug($script);
+        if(!empty($sarehub_log)) {
+            $script .= PHP_EOL . '   console.log(' . json_encode(['site' => $eventType, 'type' => $event->getType(), 'data' => $event->getEncodedParams()]) . ');';
+        }
+        $script .= PHP_EOL . '  </script>';
 
         return $script;
     }
