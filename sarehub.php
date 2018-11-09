@@ -47,6 +47,7 @@ class Sarehub extends Module
 
         Configuration::deleteByName('SAREHUB_DOMAIN');
         Configuration::deleteByName('SAREHUB_PUSH');
+        Configuration::deleteByName('SAREHUB_TIME');
         Configuration::deleteByName('SAREHUB_LOG');
         return parent::uninstall();
     }
@@ -59,6 +60,7 @@ class Sarehub extends Module
         if (Tools::isSubmit('submit' . $this->name)) {
             Configuration::updateValue('SAREHUB_DOMAIN', Tools::getValue('SAREHUB_DOMAIN'));
             Configuration::updateValue('SAREHUB_PUSH', Tools::getValue('SAREHUB_PUSH'));
+            Configuration::updateValue('SAREHUB_TIME', Tools::getValue('SAREHUB_TIME'));
             Configuration::updateValue('SAREHUB_LOG', Tools::getValue('SAREHUB_LOG'));
             $output .= $this->displayConfirmation($this->l('Settings updated successfully'));
         }
@@ -124,6 +126,25 @@ class Sarehub extends Module
                     ),
                     array(
                         'type' => 'switch',
+                        'label' => $this->l('Send time events'),
+                        'name' => 'SAREHUB_TIME',
+                        'is_bool' => true,
+                        'values' => array(
+                            array(
+                                'id' => 'time_on',
+                                'value' => 1,
+                                'label' => $this->l('Yes')
+                            ),
+                            array(
+                                'id' => 'time_off',
+                                'value' => 0,
+                                'label' => $this->l('No')
+                            )
+                        ),
+                        'desc' => $this->l('Check to send time events')
+                    ),
+                    array(
+                        'type' => 'switch',
                         'label' => $this->l('Log events to console'),
                         'name' => 'SAREHUB_LOG',
                         'is_bool' => true,
@@ -151,6 +172,7 @@ class Sarehub extends Module
         // Load current value
         $helper->fields_value['SAREHUB_DOMAIN'] = Configuration::get('SAREHUB_DOMAIN');
         $helper->fields_value['SAREHUB_PUSH'] = Configuration::get('SAREHUB_PUSH');
+        $helper->fields_value['SAREHUB_TIME'] = Configuration::get('SAREHUB_TIME');
         $helper->fields_value['SAREHUB_LOG'] = Configuration::get('SAREHUB_LOG');
 
         return $helper->generateForm(array($fields_forms));
@@ -232,6 +254,7 @@ class Sarehub extends Module
             return;
         }
         $sarehub_push = Tools::safeOutput(Configuration::get('SAREHUB_PUSH'));
+        $sarehub_time = Tools::safeOutput(Configuration::get('SAREHUB_TIME'));
         $sarehub_log = Tools::safeOutput(Configuration::get('SAREHUB_LOG'));
         $script = '<script type="text/javascript">' .
             PHP_EOL . '   (function (p){' .
@@ -240,6 +263,11 @@ class Sarehub extends Module
             PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
             PHP_EOL . '   })({' .
             PHP_EOL . '       domain : \'' . $sarehub_domain . '\'';
+
+        if(!empty($sarehub_time)){
+            $script .= ',';
+            $script .= PHP_EOL . '       ping : {\'period0\' : 10, \'period1\' : 60}';
+        }
         if(!empty($sarehub_push)){
             $script .= ',';
             $script .= PHP_EOL . '      webPush: {';
