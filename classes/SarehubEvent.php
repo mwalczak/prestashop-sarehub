@@ -8,23 +8,35 @@
 
 class SarehubEvent
 {
+    private $domain;
     private $userId;
     private $email;
     private $id;
     private $type = "event";
     private $params = [];
     private $JSEvents = [];
+    private $pushNotifications = '';
+    private $timeEvents = false;
     private $logging = false;
 
-    public function __construct($userId = null, $email = null)
+    public function __construct($domain, $userId = null, $email = null)
     {
+        $this->domain = $domain;
         $this->userId = $userId;
         $this->email = $email;
     }
 
-    public function setLogging($log)
+    public function setPushNotifications($pushNotifications)
     {
-        $this->logging = $log;
+        $this->pushNotifications = $pushNotifications;
+    }
+    public function setTimeEvents($timeEvents)
+    {
+        $this->timeEvents = (bool) $timeEvents;
+    }
+    public function setLogging($logging)
+    {
+        $this->logging = (bool) $logging;
     }
 
     public function getEncodedParams()
@@ -43,7 +55,6 @@ class SarehubEvent
                     )
                 ]
             );
-
         } else {
             return json_encode(array_merge([
                 '_userId' => $this->userId,
@@ -99,6 +110,7 @@ class SarehubEvent
 
     public function setCartRegistration($cartId)
     {
+        $cartId = '';   //needs to be fixed on SH side
         $this->id = 10;
         $this->params['_cartregistration'] = [
             'cart_id' => $cartId
@@ -108,6 +120,7 @@ class SarehubEvent
 
     public function setCartPurchased($cartId)
     {
+        $cartId = '';   //needs to be fixed on SH side
         $this->id = 10;
         $this->params['_cartpurchased'] = [
             'cart_id' => $cartId
@@ -117,6 +130,7 @@ class SarehubEvent
 
     public function setCartQuantity($cartId, $productId, $quantity, $country, $language)
     {
+        $cartId = '';   //needs to be fixed on SH side
         $this->params['_cartquantity'] = [
             'cart_id' => $cartId,
             'product_id' => $productId,
@@ -129,6 +143,7 @@ class SarehubEvent
 
     public function setJSEvent($eventType, $country, $language, $cartId)
     {
+        $cartId = '';   //needs to be fixed on SH side
         switch ($eventType) {
             case "productCartAdd":
                 $this->JSEvents[] =
@@ -204,5 +219,45 @@ class SarehubEvent
     public function getJSEvent()
     {
         return implode(PHP_EOL, $this->JSEvents);
+    }
+
+    public function getJavaScript($pageType){
+        $script = '<script type="text/javascript">';
+        if(empty($this->domain)){
+            $script .= 'console.log(\'SAREhub Error: Configure your domain first\');';
+        } else {
+            $script .=
+                PHP_EOL . '   (function (p){' .
+                PHP_EOL . '   window[\'sareX_params\']=p;var s=document.createElement(\'script\');' .
+                PHP_EOL . '   s.src=\'//x.sare25.com/libs/sarex4.min.js\';s.async=true;var t=document.getElementsByTagName(\'script\')[0];' .
+                PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
+                PHP_EOL . '   })({' .
+                PHP_EOL . '       domain : \'' . $this->domain . '\'';
+
+            if(!empty($this->timeEvents)){
+                $script .= ',';
+                $script .= PHP_EOL . '       ping : {\'period0\' : 10, \'period1\' : 60}';
+            }
+            if(!empty($this->pushNotifications)){
+                $script .= ',';
+                $script .= PHP_EOL . '      webPush: {';
+                $script .= PHP_EOL . '          mode: \''.$this->pushNotifications.'\'';
+                $script .= PHP_EOL . '      }';
+            }
+            $script .= PHP_EOL . '   });';
+            if ($params = $this->getEncodedParams()) {
+                $script .=
+                    PHP_EOL . '   sareX_params.'.$this->getType().' = ' . $params . ';';
+            }
+            if ($JSEvent = $this->getJSEvent()) {
+                $script .= PHP_EOL . PHP_EOL. $JSEvent;
+            }
+            if(!empty($this->logging)) {
+                $script .= PHP_EOL . '   console.log(' . json_encode(['site' => $pageType, 'type' => $this->getType(), 'data' => $this->getEncodedParams()]) . ');';
+            }
+        }
+        $script .= PHP_EOL . '  </script>';
+
+        return $script;
     }
 }

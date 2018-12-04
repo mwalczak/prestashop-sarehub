@@ -106,7 +106,7 @@ class Sarehub extends Module
                         'options' => array(
                             'query' => array(
                                 array(
-                                    'value' => 0,       // The value of the 'value' attribute of the <option> tag.
+                                    'value' => '',       // The value of the 'value' attribute of the <option> tag.
                                     'name' => 'Disable'    // The value of the text content of the  <option> tag.
                                 ),
                                 array(
@@ -178,22 +178,28 @@ class Sarehub extends Module
         return $helper->generateForm(array($fields_forms));
     }
 
+    private function createSarehubEvent(){
+        $event = new SarehubEvent(Tools::safeOutput(Configuration::get('SAREHUB_DOMAIN')), $this->context->customer->id, $this->context->customer->email);
+        $event->setPushNotifications(Tools::safeOutput(Configuration::get('SAREHUB_PUSH')));
+        $event->setTimeEvents(Tools::safeOutput(Configuration::get('SAREHUB_TIME')));
+        $event->setLogging(Tools::safeOutput(Configuration::get('SAREHUB_LOG')));
+        return $event;
+    }
+
     public function hookOrderConfirmation($params)
     {
         $order = $params['order'];
         if (!empty($order)) {
-            $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
+            $event = $this->createSarehubEvent();
             $event->setCartPurchased($order->id_cart);
-            return $this->genScript($event, "OrderConfirmation");
+            return $event->getJavaScript("OrderConfirmation");
         }
         return "";
     }
 
     public function hookHeader($params)
     {
-        $sarehub_log = Tools::safeOutput(Configuration::get('SAREHUB_LOG'));
-        $event = new SarehubEvent($this->context->customer->id, $this->context->customer->email);
-        $event->setLogging($sarehub_log);
+        $event = $this->createSarehubEvent();
         switch ($this->getPage()) {
             case "ProductController":
                 if ($id_product = (int)Tools::getValue('id_product')) {
@@ -239,54 +245,11 @@ class Sarehub extends Module
                 $event->setJSEvent("productCartAdd", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
                 break;
         }
-        return $this->genScript($event, $this->getPage());
+        return $event->getJavaScript($this->getPage());
     }
 
     private function getPage()
     {
         return !empty($this->context->controller) ? get_class($this->context->controller) : "";
-    }
-
-    private function genScript(SarehubEvent $event, $eventType = '')
-    {
-        $sarehub_domain = Tools::safeOutput(Configuration::get('SAREHUB_DOMAIN'));
-        if (!$sarehub_domain) {
-            return;
-        }
-        $sarehub_push = Tools::safeOutput(Configuration::get('SAREHUB_PUSH'));
-        $sarehub_time = Tools::safeOutput(Configuration::get('SAREHUB_TIME'));
-        $sarehub_log = Tools::safeOutput(Configuration::get('SAREHUB_LOG'));
-        $script = '<script type="text/javascript">' .
-            PHP_EOL . '   (function (p){' .
-            PHP_EOL . '   window[\'sareX_params\']=p;var s=document.createElement(\'script\');' .
-            PHP_EOL . '   s.src=\'//x.sare25.com/libs/sarex4.min.js\';s.async=true;var t=document.getElementsByTagName(\'script\')[0];' .
-            PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
-            PHP_EOL . '   })({' .
-            PHP_EOL . '       domain : \'' . $sarehub_domain . '\'';
-
-        if(!empty($sarehub_time)){
-            $script .= ',';
-            $script .= PHP_EOL . '       ping : {\'period0\' : 10, \'period1\' : 60}';
-        }
-        if(!empty($sarehub_push)){
-            $script .= ',';
-            $script .= PHP_EOL . '      webPush: {';
-            $script .= PHP_EOL . '          mode: \''.$sarehub_push.'\'';
-            $script .= PHP_EOL . '      }';
-        }
-        $script .= PHP_EOL . '   });';
-        if ($params = $event->getEncodedParams()) {
-            $script .=
-                PHP_EOL . '   sareX_params.'.$event->getType().' = ' . $params . ';';
-        }
-        if ($JSEvent = $event->getJSEvent()) {
-            $script .= PHP_EOL . PHP_EOL. $JSEvent;
-        }
-        if(!empty($sarehub_log)) {
-            $script .= PHP_EOL . '   console.log(' . json_encode(['site' => $eventType, 'type' => $event->getType(), 'data' => $event->getEncodedParams()]) . ');';
-        }
-        $script .= PHP_EOL . '  </script>';
-
-        return $script;
     }
 }
