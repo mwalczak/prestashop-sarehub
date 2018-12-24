@@ -108,6 +108,16 @@ class SarehubEvent
         return $this;
     }
 
+    public function setCartInitialized($cartId)
+    {
+        $cartId = '';   //needs to be fixed on SH side
+        $this->id = 10;
+        $this->params['_cartinitialized'] = [
+            'cart_id' => $cartId
+        ];
+        return $this;
+    }
+
     public function setCartRegistration($cartId)
     {
         $cartId = '';   //needs to be fixed on SH side
