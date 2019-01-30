@@ -1,34 +1,23 @@
 <?php
 /**
-
  * NOTICE OF LICENSE
-
  *
-
  * This file is licenced under the Software License Agreement.
-
  * With the purchase or the installation of the software in your application
-
  * you accept the licence agreement.
-
  *
-
  * You must not modify, adapt or create derivative works of this source code
-
  *
-
- *  @author    Mateusz Walczak
-
- *  @copyright 2018-2019 SARE SA
-
- *  @license   GNU General Public License version 2
-
+ * @author    Mateusz Walczak
+ * @copyright 2018-2019 SARE SA
+ * @license   GNU General Public License version 2
  */
 
 require_once "classes/SarehubEvent.php";
 
-if (!defined('_PS_VERSION_'))
+if (!defined('_PS_VERSION_')) {
     exit;
+}
 
 class Sarehub extends Module
 {
@@ -51,8 +40,9 @@ class Sarehub extends Module
         if (!parent::install() ||
             !$this->registerHook('header') ||
             !$this->registerHook('orderConfirmation')
-        )
+        ) {
             return false;
+        }
 
         return true;
     }
@@ -61,8 +51,9 @@ class Sarehub extends Module
     {
         if (!$this->unregisterHook('header') ||
             !$this->unregisterHook('orderConfirmation')
-        )
+        ) {
             return false;
+        }
 
         Configuration::deleteByName('SAREHUB_DOMAIN');
         Configuration::deleteByName('SAREHUB_PUSH');
@@ -197,7 +188,8 @@ class Sarehub extends Module
         return $helper->generateForm(array($fields_forms));
     }
 
-    private function createSarehubEvent(){
+    private function createSarehubEvent()
+    {
         $event = new SarehubEvent(Tools::safeOutput(Configuration::get('SAREHUB_DOMAIN')), $this->context->customer->id, $this->context->customer->email);
         $event->setPushNotifications(Tools::safeOutput(Configuration::get('SAREHUB_PUSH')));
         $event->setTimeEvents(Tools::safeOutput(Configuration::get('SAREHUB_TIME')));
@@ -243,7 +235,6 @@ class Sarehub extends Module
                             $this->context->language->iso_code
                         )
                         ->setJSEvent("productCartAdd", $this->context->country->iso_code, $this->context->language->iso_code, $params['cart']->id);
-
                 }
                 break;
             case "CartController":

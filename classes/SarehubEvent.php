@@ -1,28 +1,16 @@
 <?php
 /**
-
  * NOTICE OF LICENSE
-
  *
-
  * This file is licenced under the Software License Agreement.
-
  * With the purchase or the installation of the software in your application
-
  * you accept the licence agreement.
-
  *
-
  * You must not modify, adapt or create derivative works of this source code
-
  *
-
- *  @author    Mateusz Walczak
-
- *  @copyright 2018-2019 SARE SA
-
- *  @license   GNU General Public License version 2
-
+ * @author    Mateusz Walczak
+ * @copyright 2018-2019 SARE SA
+ * @license   GNU General Public License version 2
  */
 
 class SarehubEvent
@@ -49,21 +37,24 @@ class SarehubEvent
     {
         $this->pushNotifications = $pushNotifications;
     }
+
     public function setTimeEvents($timeEvents)
     {
-        $this->timeEvents = (bool) $timeEvents;
+        $this->timeEvents = (bool)$timeEvents;
     }
+
     public function setLogging($logging)
     {
-        $this->logging = (bool) $logging;
+        $this->logging = (bool)$logging;
     }
 
     public function getEncodedParams()
     {
         if (empty($this->params)) {
-            return "";
+            $ret = "";
         } elseif ($this->type == "event") {
-            return json_encode(array(
+            $ret = json_encode(
+                array(
                     'id' => $this->id,
                     'params' => array_merge(
                         array(
@@ -74,12 +65,14 @@ class SarehubEvent
                     )
                 )
             );
+            return $ret;
         } else {
-            return json_encode(array_merge(array(
+            $ret = json_encode(array_merge(array(
                 '_userId' => $this->userId,
                 '_email' => $this->email
             ), $this->params));
         }
+        return $ret;
     }
 
     public function setType($type)
@@ -245,9 +238,10 @@ class SarehubEvent
         return implode(PHP_EOL, $this->JSEvents);
     }
 
-    public function getJavaScript($pageType){
+    public function getJavaScript($pageType)
+    {
         $script = '<script type="text/javascript">';
-        if(empty($this->domain)){
+        if (empty($this->domain)) {
             $script .= 'console.log(\'SAREhub Error: Configure your domain first\');';
         } else {
             $script .=
@@ -256,28 +250,28 @@ class SarehubEvent
                 PHP_EOL . '   s.src=\'//x.sare25.com/libs/sarex4.min.js\';s.async=true;var t=document.getElementsByTagName(\'script\')[0];' .
                 PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
                 PHP_EOL . '   })({' .
-                PHP_EOL . '       domain : \'' . $this->domain . '\','.
+                PHP_EOL . '       domain : \'' . $this->domain . '\',' .
                 PHP_EOL . '       inisTrack : {t:\'p\', c:\'moxie\',s:\'all\', uid:[2014]}';
 
-            if(!empty($this->timeEvents)){
+            if (!empty($this->timeEvents)) {
                 $script .= ',';
                 $script .= PHP_EOL . '       ping : {\'period0\' : 10, \'period1\' : 60}';
             }
-            if(!empty($this->pushNotifications)){
+            if (!empty($this->pushNotifications)) {
                 $script .= ',';
                 $script .= PHP_EOL . '      webPush: {';
-                $script .= PHP_EOL . '          mode: \''.$this->pushNotifications.'\'';
+                $script .= PHP_EOL . '          mode: \'' . $this->pushNotifications . '\'';
                 $script .= PHP_EOL . '      }';
             }
             $script .= PHP_EOL . '   });';
             if ($params = $this->getEncodedParams()) {
                 $script .=
-                    PHP_EOL . '   sareX_params.'.$this->getType().' = ' . $params . ';';
+                    PHP_EOL . '   sareX_params.' . $this->getType() . ' = ' . $params . ';';
             }
             if ($JSEvent = $this->getJSEvent()) {
-                $script .= PHP_EOL . PHP_EOL. $JSEvent;
+                $script .= PHP_EOL . PHP_EOL . $JSEvent;
             }
-            if(!empty($this->logging)) {
+            if (!empty($this->logging)) {
                 $script .= PHP_EOL . '   console.log(' . json_encode(array('site' => $pageType, 'type' => $this->getType(), 'data' => $this->getEncodedParams())) . ');';
             }
         }
