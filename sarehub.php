@@ -1,9 +1,28 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: mwalczak
- * Date: 20.10.2018
- * Time: 19:53
+
+ * NOTICE OF LICENSE
+
+ *
+
+ * This file is licenced under the Software License Agreement.
+
+ * With the purchase or the installation of the software in your application
+
+ * you accept the licence agreement.
+
+ *
+
+ * You must not modify, adapt or create derivative works of this source code
+
+ *
+
+ *  @author    Mateusz Walczak
+
+ *  @copyright 2018-2019 SARE SA
+
+ *  @license   GNU General Public License version 2
+
  */
 
 require_once "classes/SarehubEvent.php";
@@ -18,7 +37,7 @@ class Sarehub extends Module
         $this->name = 'sarehub';
         $this->tab = 'front_office_features';
         $this->author = 'm.walczak@sare.pl';
-        $this->version = '1.0';
+        $this->version = '1.0.0';
         $this->bootstrap = true;
 
         parent::__construct();

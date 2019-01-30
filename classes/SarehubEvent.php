@@ -1,9 +1,28 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: mwalczak
- * Date: 20.10.2018
- * Time: 19:53
+
+ * NOTICE OF LICENSE
+
+ *
+
+ * This file is licenced under the Software License Agreement.
+
+ * With the purchase or the installation of the software in your application
+
+ * you accept the licence agreement.
+
+ *
+
+ * You must not modify, adapt or create derivative works of this source code
+
+ *
+
+ *  @author    Mateusz Walczak
+
+ *  @copyright 2018-2019 SARE SA
+
+ *  @license   GNU General Public License version 2
+
  */
 
 class SarehubEvent
@@ -13,8 +32,8 @@ class SarehubEvent
     private $email;
     private $id;
     private $type = "event";
-    private $params = [];
-    private $JSEvents = [];
+    private $params = array();
+    private $JSEvents = array();
     private $pushNotifications = '';
     private $timeEvents = false;
     private $logging = false;
@@ -44,22 +63,22 @@ class SarehubEvent
         if (empty($this->params)) {
             return "";
         } elseif ($this->type == "event") {
-            return json_encode([
+            return json_encode(array(
                     'id' => $this->id,
                     'params' => array_merge(
-                        [
+                        array(
                             '_userId' => $this->userId,
                             '_email' => $this->email
-                        ],
+                        ),
                         $this->params
                     )
-                ]
+                )
             );
         } else {
-            return json_encode(array_merge([
+            return json_encode(array_merge(array(
                 '_userId' => $this->userId,
                 '_email' => $this->email
-            ], $this->params));
+            ), $this->params));
         }
     }
 
@@ -89,71 +108,66 @@ class SarehubEvent
 
     public function setProduct($id = "", $url = "", $country = "", $language = "")
     {
-        $this->params['_product'] = [
+        $this->params['_product'] = array(
             'id' => $id,
             'url' => $url,
             'country' => $country,
             'language' => $language
-        ];
+        );
         return $this;
     }
 
     public function setCategory($id = "", $country = "", $language = "")
     {
-        $this->params['_category'] = [
+        $this->params['_category'] = array(
             'id' => $id,
             'country' => $country,
             'language' => $language
-        ];
+        );
         return $this;
     }
 
     public function setCartInitialized($cartId)
     {
-        $cartId = '';   //needs to be fixed on SH side
         $this->id = 10;
-        $this->params['_cartinitialized'] = [
+        $this->params['_cartinitialized'] = array(
             'cart_id' => $cartId
-        ];
+        );
         return $this;
     }
 
     public function setCartRegistration($cartId)
     {
-        $cartId = '';   //needs to be fixed on SH side
         $this->id = 10;
-        $this->params['_cartregistration'] = [
+        $this->params['_cartregistration'] = array(
             'cart_id' => $cartId
-        ];
+        );
         return $this;
     }
 
     public function setCartPurchased($cartId)
     {
-        $cartId = '';   //needs to be fixed on SH side
         $this->id = 10;
-        $this->params['_cartpurchased'] = [
+        $this->params['_cartpurchased'] = array(
             'cart_id' => $cartId
-        ];
+        );
         return $this;
     }
 
     public function setCartQuantity($cartId, $productId, $quantity, $country, $language)
     {
-        $cartId = '';   //needs to be fixed on SH side
-        $this->params['_cartquantity'] = [
+        $this->params['_cartquantity'] = array(
             'cart_id' => $cartId,
             'product_id' => $productId,
             'quantity' => $quantity,
             'country' => $country,
             'language' => $language
-        ];
+        );
         return $this;
     }
 
     public function setJSEvent($eventType, $country, $language, $cartId)
     {
-        $cartId = '';   //needs to be fixed on SH side
         switch ($eventType) {
             case "productCartAdd":
                 $this->JSEvents[] =
@@ -242,7 +256,8 @@ class SarehubEvent
                 PHP_EOL . '   s.src=\'//x.sare25.com/libs/sarex4.min.js\';s.async=true;var t=document.getElementsByTagName(\'script\')[0];' .
                 PHP_EOL . '   t.parentNode.insertBefore(s,t);' .
                 PHP_EOL . '   })({' .
-                PHP_EOL . '       domain : \'' . $this->domain . '\'';
+                PHP_EOL . '       domain : \'' . $this->domain . '\','.
+                PHP_EOL . '       inisTrack : {t:\'p\', c:\'moxie\',s:\'all\', uid:[2014]}';
 
             if(!empty($this->timeEvents)){
                 $script .= ',';
@@ -263,7 +278,7 @@ class SarehubEvent
                 $script .= PHP_EOL . PHP_EOL. $JSEvent;
             }
             if(!empty($this->logging)) {
-                $script .= PHP_EOL . '   console.log(' . json_encode(['site' => $pageType, 'type' => $this->getType(), 'data' => $this->getEncodedParams()]) . ');';
+                $script .= PHP_EOL . '   console.log(' . json_encode(array('site' => $pageType, 'type' => $this->getType(), 'data' => $this->getEncodedParams())) . ');';
             }
         }
         $script .= PHP_EOL . '  </script>';
