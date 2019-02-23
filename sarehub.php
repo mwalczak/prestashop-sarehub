@@ -25,9 +25,10 @@ class Sarehub extends Module
     {
         $this->name = 'sarehub';
         $this->tab = 'front_office_features';
-        $this->author = 'm.walczak@sare.pl';
         $this->version = '1.0.0';
+        $this->author = 'SARE';
         $this->bootstrap = true;
+        $this->module_key = '0e85ff4c0bf835da628f9a3e5f0cb0aa';
 
         parent::__construct();
         $this->displayName = $this->l('SAREhub integration module');
@@ -68,11 +69,15 @@ class Sarehub extends Module
 
         // If form has been sent
         if (Tools::isSubmit('submit' . $this->name)) {
-            Configuration::updateValue('SAREHUB_DOMAIN', Tools::getValue('SAREHUB_DOMAIN'));
-            Configuration::updateValue('SAREHUB_PUSH', Tools::getValue('SAREHUB_PUSH'));
-            Configuration::updateValue('SAREHUB_TIME', Tools::getValue('SAREHUB_TIME'));
-            Configuration::updateValue('SAREHUB_LOG', Tools::getValue('SAREHUB_LOG'));
-            $output .= $this->displayConfirmation($this->l('Settings updated successfully'));
+            if (empty(Tools::getValue('SAREHUB_DOMAIN')) || empty(Tools::getValue('SAREHUB_PUSH'))) {
+                $output .= $this->displayError($this->l('Please provide all required settings'));
+            } else {
+                Configuration::updateValue('SAREHUB_DOMAIN', Tools::getValue('SAREHUB_DOMAIN'));
+                Configuration::updateValue('SAREHUB_PUSH', Tools::getValue('SAREHUB_PUSH'));
+                Configuration::updateValue('SAREHUB_TIME', Tools::getValue('SAREHUB_TIME'));
+                Configuration::updateValue('SAREHUB_LOG', Tools::getValue('SAREHUB_LOG'));
+                $output .= $this->displayConfirmation($this->l('Settings updated successfully'));
+            }
         }
 
         $output .= $this->renderForm();
